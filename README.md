@@ -1,102 +1,113 @@
-1. Introduction au projet MakeIt
-MakeIt est une application iOS développée en SwiftUI conçue pour centraliser vos routines d'exercices. L'application permet d'organiser vos activités par groupes ou individuellement, avec trois modes de fonctionnement :
+# MakeIt - Application de suivi d'exercices
 
-SmartTimer : Un système intelligent alternant temps d'effort et de récupération (Tabata/HIIT).
+MakeIt est une application mobile pour iPhone développée en **SwiftUI**. Elle a pour but de permettre de créer des exercices (sportifs ou autres) pour en garder une trace et les centraliser au même endroit.
 
-Timer : Un compte à rebours classique.
+## 📱 Fonctionnalités
 
-None : Une simple note de suivi.
+- **Organisation** : Possibilité de créer des groupes pour organiser les exercices, ou de créer des exercices isolés.
+- **Types d'exercices** :
+  - **SmartTimer** : Décompte de 5s au démarrage, puis alternance entre temps d'effort et temps de récupération (selon les répétitions et séries définies).
+  - **Timer** : Compte à rebours classique depuis une durée définie jusqu'à zéro.
+  - **None** : Mode texte uniquement pour noter l'exercice sans chronomètre.
+- **Suivi de Strike** : Suivi quotidien pour les exercices marqués comme récurrents lors de leur création.
 
-L'application intègre également un système de strikes pour les exercices quotidiens.
+---
 
-2. Ouverture du projet dans Xcode
-Si vous n'êtes pas familier avec le développement iOS, voici comment ouvrir le projet :
+## 🛠 Configuration iOS (Xcode)
 
-Assurez-vous d'avoir installé Xcode depuis l'App Store.
+### 1. Ouverture du projet
 
-Localisez le dossier racine de votre projet nommé MakeIt.
+Si vous ne connaissez pas Xcode :
+1. Installez **Xcode** via l'App Store de votre Mac.
+2. Localisez le dossier racine du projet `MakeIt`.
+3. Double-cliquez sur le fichier `.xcodeproj` (ou `.xcworkspace`) pour ouvrir le projet.
 
-Cherchez le fichier se terminant par .xcodeproj ou .xcworkspace.
+### 2. Configuration de l'URL API
 
-Double-cliquez sur ce fichier pour lancer l'environnement de développement.
+1. Dans Xcode, naviguez dans le dossier `API/api`.
+2. Ouvrez le fichier de configuration et allez à la **ligne 13**.
+3. Remplacez le texte par vos URLs respectives :
+```swift
+static let baseURL = URL(string: false ? "VOTRE_URL_LOCAL" : "VOTRE_URL_CLOUDFLARE")!
+```
 
-3. Configuration de l'API (Swift)
-Une fois Xcode ouvert, vous devez configurer les URLs de connexion aux serveurs.
+**Note :** L'application utilisera l'URL locale si la condition est `false` et l'URL Cloudflare si elle est `true`.
 
-Dans le navigateur de fichiers (à gauche), allez dans le dossier API/api.
+---
 
-Ouvrez le fichier Swift concerné.
+## ☁️ Configuration des Serveurs (Cloudflare Workers)
 
-À la ligne 13, remplacez la variable baseURL par vos adresses :
+Le backend repose sur deux serveurs en TypeScript. Vous devez ajouter un fichier nommé `wrangler.jsonc` à la racine de chaque dossier de serveur avant de lancer l'installation.
 
-Swift
-// Remplacez par vos URLs réelles
-static let baseURL = URL(string: false ? "replace it (local server if false)" : "replace it (cloudfloud server if false)")!
-Note : Mettre le booléen à false utilisera l'URL locale, tandis que true activera l'URL Cloudflare.
+### 1. Serveur API (server-dailytasks)
 
-4. Configuration des serveurs Cloudflare (TypeScript)
-Le projet utilise deux serveurs (Workers) pour la gestion des données et des tâches automatisées. Avant de continuer, créez un fichier nommé wrangler.jsonc à la racine de chaque dossier de serveur respectif.
+Ce serveur gère les actions sur la base de données D1 lors de l'utilisation de l'application.
 
-Serveur Principal (Actions Base de Données)
-Dans le dossier du serveur normal, insérez ce contenu dans wrangler.jsonc :
-
-JSON
+**Fichier :** `wrangler.jsonc`
+```json
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "server-dailytasks",
-	"main": "src/index.ts",
-	"compatibility_date": "2025-06-14",
-	"observability": {
-		"enabled": true
-	},
-	"d1_databases": [
-		{
-		  "binding": "DB",
-		  "database_name": "NOM_DE_VOTRE_DB",
-		  "database_id": "VOTRE_DATABASE_ID",
-		  "migrations_dir": "migrations/"
-		}
-	]
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "server-dailytasks",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-14",
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "NOM_DE_VOTRE_DB",
+      "database_id": "DATABASE_ID",
+      "migrations_dir": "migrations/"
+    }
+  ]
 }
-Serveur Cronjobs (Tâches automatisées)
-Dans le dossier du serveur cronjobs, insérez ce contenu dans wrangler.jsonc :
+```
 
-JSON
+### 2. Serveur Cronjobs (server-cronjobs)
+
+Ce serveur gère les tâches automatisées (Cronjobs) programmées à 00:23 chaque jour.
+
+**Fichier :** `wrangler.jsonc`
+```json
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "server-cronjobs",
-	"main": "src/index.ts",
-	"compatibility_date": "2025-06-18",
-	"observability": {
-		"enabled": true
-	},
-	"d1_databases": [
-		{
-		  "binding": "DB",
-		  "database_name": "NOM_DE_VOTRE_DB",
-		  "database_id": "VOTRE_DATABASE_ID",
-		  "migrations_dir": "migrations/"
-		}
-	],
-	"triggers": {
-		"crons": [
-			"23 0 * * *"
-		]
-	}
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "server-cronjobs",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-06-18",
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "NOM_DE_VOTRE_DB",
+      "database_id": "DATABASE_ID",
+      "migrations_dir": "migrations/"
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "23 0 * * *"
+    ]
+  }
 }
-5. Installation et Lancement
-Pour chaque serveur, ouvrez un terminal et suivez ces étapes :
+```
 
-Installation des dépendances :
+---
 
-Bash
+## 🚀 Installation et Lancement
+
+Pour chaque dossier de serveur (`server-dailytasks` et `server-cronjobs`), ouvrez un terminal et exécutez les commandes suivantes :
+
+**1. Installer les dépendances :**
+```bash
 npm i
-Cette commande va créer le dossier node_modules.
+```
 
-Lancement en local :
+Cela créera le dossier `node_modules` nécessaire au projet.
 
-Bash
+**2. Lancer le serveur en local :**
+```bash
 npm start
-Le serveur sera alors accessible localement pour vos tests avec l'application.
-
-Souhaitez-vous que je vous aide à rédiger la documentation des routes API pour ces serveurs ?
+```
