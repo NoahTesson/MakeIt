@@ -1,0 +1,10 @@
+# Mac
+.DS_Store
+
+# Xcode
+build/
+DerivedData/
+*.xcworkspace/xcuserdata
+
+# Cloudflare
+**/wrangler.jsonc
